@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat with OpenAI</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #1f2937;
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      width: 600px;
+      background-color: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    label {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 12px 20px;
+      background-color: #2563eb;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #1e40af;
+    }
+
+    pre {
+      background-color: #f3f4f6;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1.5rem;
+      border: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <h1>OpenAI Chat Stream</h1>
+  <div class="container">
+    <label for="question">질문을 입력해주세요</label>
+    <input type="text" id="question" placeholder="e.g. 안녕 오늘 서울 날씨는 어때?" />
+    <button onclick="askQuestion()">입력</button>
+
+    <pre id="response"></pre>
+  </div>
+
+  <script>
+    async function askQuestion() {
+      const question = document.getElementById('question').value;
+      const responseBox = document.getElementById('response');
+  
+      const response = await fetch('http://localhost:8000/openai/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ data: question })
+      });
+  
+      if (!response.body) {
+        responseBox.textContent = '❌ 응답 스트림이 없습니다.';
+        return;
+      }
+  
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+  
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+  
+        buffer += decoder.decode(value, { stream: true });
+  
+        // 줄 단위로 나눔
+        const lines = buffer.split('\n');
+        buffer = lines.pop();  // 마지막 줄이 완성되지 않았을 수 있으니 buffer에 보류
+  
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const content = line.slice(6);
+            if (content === '[DONE]') {
+              return;
+            }
+            responseBox.textContent += content;
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
