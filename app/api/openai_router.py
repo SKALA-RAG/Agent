@@ -3,6 +3,7 @@ from fastapi import APIRouter, Header, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.open_ai import get_streaming_message_from_openai
+from app.agents.info_perform_agent import get_info_perform
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -29,3 +30,18 @@ async def get_generated_messages_with_header(
         get_streaming_message_from_openai(request.data), 
         media_type="text/event-stream"
     )
+
+@router.post(
+    "/info_perform",
+    summary="Generate messages using OpenAI (streaming)",
+)
+async def get_generated_messages_with_header(
+    request: AskRequest
+):
+    """
+    ## Tavily로 기업 실적 및 창업자 정보 검색
+    - data: 기업 정보 템플릿
+    - return: 기업 실적 및 창업자 정보 요약
+    """
+    
+    return await get_info_perform(request.data)
