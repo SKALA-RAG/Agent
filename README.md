@@ -49,6 +49,7 @@
 | **Report Generator Agent**     | 모든 평가 결과를 바탕으로 최종 투자 검토 보고서 자동 생성 |
 
 ### Directory Structure
+```
 Agent/
 ├── app/
 │   ├── agents/
@@ -73,6 +74,7 @@ Agent/
 ├── .gitignore
 ├── README.md
 └── requirements.txt
+```
 
 ### langgraph
 시도중..........
