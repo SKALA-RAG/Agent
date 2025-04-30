@@ -47,8 +47,8 @@
 | **Supervisor Agent**           | 개별 Agent의 분석 결과를 통합하여 투자 판단용 정리 정보 생성 |
 | **Investment Decision Agent**  | 글로벌 유사 기업의 수치 데이터를 기반으로 점수화 (매출, 유저 수, 계약 등 / RAG + Tavily) |
 | **Report Generator Agent**     | 모든 평가 결과를 바탕으로 최종 투자 검토 보고서 자동 생성 |
-| **tech_summary_agent**         |  |
-| **vectorize_papers_agent**     |  |
+| **tech_summary_agent**         | 특허 기반으로 벡터DB에서 논문 내용 추출 및 두 가지(논문 + 특허) 내용 활용을 통한 기술 요약 생성 |
+| **vectorize_papers_agent**     | AI 관련 논문을 바탕으로 vectorDB 구축 |
 
 ### Directory Structure
 ```
