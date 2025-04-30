@@ -1,7 +1,7 @@
 from typing import Union
 from fastapi import APIRouter, Header, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.agents.competitor_compare_agent import compare_competitors
 from app.agents.open_ai import get_streaming_message_from_openai
 from app.agents.info_perform_agent import get_info_perform
 from fastapi.responses import StreamingResponse
@@ -45,3 +45,17 @@ async def get_generated_messages_with_header(
     """
     
     return await get_info_perform(request.data)
+
+@router.post(
+    "/competitor_compare",
+    summary="Generate competitor analysis using OpenAI and Tavily",
+)
+async def get_competitor_analysis(
+    request: AskRequest
+):
+    """
+    ## Tavily로 경쟁사 비교 분석
+    - data: 기업 정보 템플릿
+    - return: 경쟁사 목록 및 비교 분석 요약
+    """
+    return await compare_competitors(request.data)
