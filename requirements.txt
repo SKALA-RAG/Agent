@@ -4,13 +4,11 @@ langchain-core>=0.1.40
 langchain-community>=0.0.25
 langchain-openai>=0.1.8
 langchain-chroma>=0.1.0
+langchain-huggingface>=0.1.0
 
 # OpenAI LLM API
 openai>=1.0.0
 tiktoken>=0.5.1
-
-# Vector DB
-chromadb>=0.4.24
 
 # Tavily Web Search
 tavily-python>=0.3.3
