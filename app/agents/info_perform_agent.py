@@ -18,7 +18,7 @@ model = ChatOpenAI(
     temperature=0.1, 
     openai_api_key=OPENAI_API_KEY
 )
-tavily = TavilySearchResults(max_results=5)
+tavily = TavilySearchResults(max_results=20)
 
 # 프롬프트 템플릿
 company_prompt = PromptTemplate.from_template(
@@ -45,7 +45,11 @@ async def get_info_perform(data: str):
         logging.info(f"Company Search Result: {company_summary}")
 
         # 2. Tavily로 창업자 정보 검색
-        founder_query = f"{company_name} 창업자 {ceo_name} 학력 경력 창업 이력"
+        if ceo_name is None or "찾을 수 없음" in ceo_name:
+            logging.info("CEO name not found in the response. Using default CEO name.")
+            ceo_name = ""
+        # founder_query = f"{company_name} 창업자 {ceo_name}의 학력 경력 창업 이력"
+        founder_query = f"{company_name} 창업자 {ceo_name} 경력 이력"
         founder_search_result = tavily.invoke(founder_query)
         founder_summary = founder_chain.invoke({"text": founder_search_result})
 
