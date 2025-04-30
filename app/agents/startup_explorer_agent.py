@@ -1,7 +1,6 @@
 from app.agents.competitor_compare_agent import compare_competitors
 from app.agents.info_perform_agent import get_info_perform
 from app.agents.market_agent import assess_market_potential
-from app.agents.invest_agent import get_invest_judgement
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
@@ -13,7 +12,8 @@ from langchain.agents import create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate
 import os
 import random
-
+from app.agents.generate_report_agent import create_final_report
+from app.agents.invest_agent import get_invest_judgement
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -211,7 +211,7 @@ class StartupExplorerAgent:
 
           except Exception as e:
               return f"[오류 발생] {str(e)}"
-          
+    
     async def run_exploration_pipeline(self) -> List[str]:
         """
         스타트업 탐색 전체 파이프라인 실행
@@ -264,5 +264,9 @@ class StartupExplorerAgent:
           ]
 
       invest_info = await get_invest_judgement(data)
+      data.append(invest_info)
+
+      final_report = create_final_report(data)
+
       
-      return exploration_result, perform_info, competiter_info, market_info, invest_info
+      return exploration_result, perform_info, competiter_info, market_info, invest_info, final_report
