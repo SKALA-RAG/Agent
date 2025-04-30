@@ -63,6 +63,8 @@ Agent/
 │   │   ├── generate_report_agent.py
 │   │   ├── open_ai.py
 │   │   ├── invest_db.py
+│   │   ├── vectorize_papers_agent.py
+│   │   ├── tech_summary_agent.py
 │   │   └── startup_explorer_agent.py
 │   ├── graph/
 │   │   ├── investment_graph.py
