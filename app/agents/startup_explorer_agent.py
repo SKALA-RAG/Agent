@@ -1,7 +1,7 @@
 from app.agents.competitor_compare_agent import compare_competitors
 from app.agents.info_perform_agent import get_info_perform
 from app.agents.market_agent import assess_market_potential
-from langchain_teddynote.tools.tavily import TavilySearch
+from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from typing import List, Dict, Any
@@ -35,7 +35,7 @@ class StartupExplorerAgent:
         """
         self.startup_data = ""
         self.selected_startups = []
-        self.search_tool = TavilySearch()
+        self.search_tool = TavilySearchResults(max_results=20, api_key=TAVILY_API_KEY)
         self.llm = ChatOpenAI(model=CHAT_MODEL)
         self.search_results = []
         self.startup_name = ""
@@ -104,8 +104,7 @@ class StartupExplorerAgent:
         LangChain TavilySearchResults 도구를 이용한 검색 결과 반환
         """
         try:
-            # LangChain Tool의 run() 호출
-            self.search_results = self.search_tool.search(query = query)
+            self.search_results = self.search_tool.invoke(query)
 
             return self.search_results
 
@@ -157,7 +156,7 @@ class StartupExplorerAgent:
           try:
             # 1. Tavily 검색
             query = f"{self.startup_name} 회사 및 대표자 정보, 설립연도, 주요 AI 기술, 투자 현황, 최근 뉴스"
-            search_result = self.search_tool.search(query=query)
+            search_result = self.search_tool.invoke(query)
             tools = [self.search_tool]
 
             # 2. 프롬프트 정의
@@ -244,6 +243,10 @@ class StartupExplorerAgent:
     async def supervisor(self):
       await self.run_exploration_pipeline()
       
+      exploration_result = {
+            "기업 정보 요약": self.startup_data 
+        }
+      
       # 창업자 정보 실적 반환
       perform_info = await get_info_perform(self.startup_data)
       
@@ -253,4 +256,4 @@ class StartupExplorerAgent:
       # 시장 비교 분석 반환
       market_info = await assess_market_potential(self.startup_data)
       
-      return self.startup_data, perform_info, competiter_info, market_info
+      return exploration_result, perform_info, competiter_info, market_info
