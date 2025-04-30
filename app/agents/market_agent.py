@@ -20,7 +20,7 @@ model = ChatOpenAI(
     openai_api_key=OPENAI_API_KEY
 )
 
-tavily = TavilySearchResults(max_results=5)
+tavily = TavilySearchResults(max_results=20)
 
 # 프롬프트 템플릿
 market_analysis_prompt = PromptTemplate.from_template(
