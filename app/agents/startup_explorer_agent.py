@@ -1,6 +1,7 @@
 from app.agents.competitor_compare_agent import compare_competitors
 from app.agents.info_perform_agent import get_info_perform
 from app.agents.market_agent import assess_market_potential
+from app.agents.vectorize_papers_agent import get_tech_summary
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
@@ -19,16 +20,17 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 CHAT_MODEL = "gpt-4o-mini"
 
+
 class StartupExplorerAgent:
     """
     AI 스타트업을 탐색하고 투자 가능성이 있는 스타트업을 선정하여 정보를 제공하는 에이전트
-    
+
     기능:
     1. 국내외 유명 AI 스타트업 검색 및 조사
     2. 투자 가치가 있는 스타트업 선정
     3. 정형화된 형식으로 스타트업 정보 제공
     """
-    
+
     def __init__(self):
         """
         에이전트 초기화
@@ -40,23 +42,22 @@ class StartupExplorerAgent:
         self.search_results = []
         self.startup_name = ""
         self.found_startups = []
-        
-    
+
     def search_startups(self) -> List[Dict[str, Any]]:
         """
         스타트업 검색을 수행
-            
+
         Returns:
             검색된 스타트업
         """
         # 검색 쿼리 조정
         search_query = self._generate_rich_startup_query()
-        
+
         print(f"검색 쿼리: {search_query}")
-        
+
         # 실제 검색 수행
         self.search_results = self._perform_web_search(search_query)
-        
+
         return self.search_results
 
     def _generate_rich_startup_query(self) -> str:
@@ -87,18 +88,18 @@ class StartupExplorerAgent:
             "기술 데모, PoC 사례, 기업 블로그 또는 미디어에 언급된 기사를 포함해 주세요.",
             "투자자(VC), 액셀러레이터, 인큐베이터의 평가 사례가 있는 자료가 있으면 포함해주세요.",
         ]
-        
+
         selected_conditions = random.sample(conditions, 3)
 
         query = (
-            f"{random.choice(openings)}\n" +
-            "\n".join(selected_conditions) + "\n" +
-            f"{random.choice(extras)}"
+            f"{random.choice(openings)}\n"
+            + "\n".join(selected_conditions)
+            + "\n"
+            + f"{random.choice(extras)}"
         )
 
         return query
 
-    
     def _perform_web_search(self, query: str) -> List[Dict[str, Any]]:
         """
         LangChain TavilySearchResults 도구를 이용한 검색 결과 반환
@@ -111,7 +112,7 @@ class StartupExplorerAgent:
         except Exception as e:
             print(f"Tavily 검색 도구 실행 중 오류 발생: {str(e)}")
             return []
-          
+
     def select_startup_from_search_results(self) -> str:
         tools = [self.search_tool]
         # 1. 프롬프트 템플릿 설정
@@ -139,29 +140,31 @@ class StartupExplorerAgent:
         chain = prompt_template | self.llm | StrOutputParser()
 
         # 4. 질문에 대한 답변 생성
-        response = chain.invoke({
-            "context": self.search_results,
-            "list": self.found_startups
-        })
+        response = chain.invoke(
+            {"context": self.search_results, "list": self.found_startups}
+        )
 
         return response.strip()
-    
-    def collect_detailed_info(self) -> str:
-          """
-          회사명을 기반으로 Tavily 검색 후, LLM으로 요약된 회사 정보 반환
 
-          Returns:
-              str: 요약된 회사 정보
-          """
-          try:
+    def collect_detailed_info(self) -> str:
+        """
+        회사명을 기반으로 Tavily 검색 후, LLM으로 요약된 회사 정보 반환
+
+        Returns:
+            str: 요약된 회사 정보
+        """
+        try:
             # 1. Tavily 검색
             query = f"{self.startup_name} 회사 및 대표자 정보, 설립연도, 주요 AI 기술, 투자 현황, 최근 뉴스"
             search_result = self.search_tool.invoke(query)
             tools = [self.search_tool]
 
             # 2. 프롬프트 정의
-            prompt = ChatPromptTemplate.from_messages(messages=[
-              ("system", """
+            prompt = ChatPromptTemplate.from_messages(
+                messages=[
+                    (
+                        "system",
+                        """
                 아래는 '{company}'에 대한 검색 결과입니다. 이 정보를 바탕으로 회사 정보를 정리해 주세요.
                 필요한 경우 {tools}를 사용해서 추가 검색을 진행하여 최대한 정확하게 답변하세요.
 
@@ -187,73 +190,75 @@ class StartupExplorerAgent:
                 6. 연락처
                 7. 핵심 인력 (팀 구성)
                 8. 주요 연혁 (설립, 투자유치, 특허 등 중요 이력)
-                """),
-              ("placeholder", "{agent_scratchpad}"), 
-            ])
-            
+                """,
+                    ),
+                    ("placeholder", "{agent_scratchpad}"),
+                ]
+            )
+
             # 3. LLMChain 실행
             agent = create_tool_calling_agent(self.llm, tools, prompt)
 
             agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-            
+
             inputs = {
                 "company": self.startup_name,
                 "context": search_result,
-                "tools": tools
+                "tools": tools,
             }
             summary = agent_executor.invoke(inputs)
 
             print(f"기업정보: {summary['output'].strip()}")
 
+            return summary["output"].strip()
 
-            return summary['output'].strip()
+        except Exception as e:
+            return f"[오류 발생] {str(e)}"
 
-          except Exception as e:
-              return f"[오류 발생] {str(e)}"
-    
     async def run_exploration_pipeline(self) -> List[str]:
         """
         스타트업 탐색 전체 파이프라인 실행
-            
+
         Returns:
             포맷팅된 스타트업 정보
         """
         print(f"=== 스타트업 탐색 시작 ===")
-        
+
         # 1. 스타트업 검색
         print("1. 스타트업 검색 중...")
         self.search_startups()
         print(f"자료 검색 완료")
-        
+
         # 2. 검색된 정보를 바탕으로 회사 선정
         print("2. 회사 선정 중...")
         self.startup_name = self.select_startup_from_search_results()
         self.found_startups.append(self.startup_name)
         print(f"회사 이름: {self.startup_name}")
-        
+
         # 3. 회사 상세 정보 수집
         print("3. 회사 상세 정보 수집 중...")
         self.startup_data = self.collect_detailed_info()
         print(f"{self.startup_name}의 상세정보 검색 완료")
-        
+
         print("=== 스타트업 탐색 완료 ===")
-        
+
         return self.startup_data
-      
+
     async def supervisor(self):
-      await self.run_exploration_pipeline()
-      
-      exploration_result = {
-            "기업 정보 요약": self.startup_data 
-        }
-      
-      # 창업자 정보 실적 반환
-      perform_info = await get_info_perform(self.startup_data)
-      
-      # 경쟁사 비교 분석 반환
-      competiter_info = await compare_competitors(self.startup_data)
-      
-      # 시장 비교 분석 반환
-      market_info = await assess_market_potential(self.startup_data)
-      
-      return exploration_result, perform_info, competiter_info, market_info
+        await self.run_exploration_pipeline()
+
+        exploration_result = {"기업 정보 요약": self.startup_data}
+
+        # 창업자 정보 실적 반환
+        perform_info = await get_info_perform(self.startup_data)
+
+        # 경쟁사 비교 분석 반환
+        competiter_info = await compare_competitors(self.startup_data)
+
+        # 시장 비교 분석 반환
+        market_info = await assess_market_potential(self.startup_data)
+
+        # 기술 요약 반환
+        tech_info = await get_tech_summary(self.startup_data)
+
+        return exploration_result, perform_info, competiter_info, market_info, tech_info
