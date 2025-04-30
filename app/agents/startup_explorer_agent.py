@@ -1,3 +1,6 @@
+from app.agents.competitor_compare_agent import compare_competitors
+from app.agents.info_perform_agent import get_info_perform
+from app.agents.market_agent import run_market_assessment, text_to_startup_info
 from langchain_teddynote.tools.tavily import TavilySearch
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
@@ -183,3 +186,18 @@ class StartupExplorerAgent:
         print("=== 스타트업 탐색 완료 ===")
         
         return self.startup_data
+      
+    async def supervisor(self):
+      await self.run_exploration_pipeline()
+      
+      # 창업자 정보 실적 반환
+      perform_info = await get_info_perform(self.startup_data)
+      
+      # 경쟁사 비교 분석 반환
+      competiter_info = await compare_competitors(self.startup_data)
+      
+      # 시장 비교 분석 반환
+      formatted_startup_info = text_to_startup_info(self.startup_data)
+      market_info = run_market_assessment(formatted_startup_info)
+      
+      return perform_info, competiter_info, market_info

@@ -70,9 +70,9 @@ async def get_competitor_analysis(
 async def get_startup_info():
     """
     # Tavily로 스타트업 자료 검색하여 투자 검토 회사 선정
-    - return: 선정 기업 정보 요약
     """
     
     explorer = StartupExplorerAgent()
+    startup_data = await explorer.supervisor()
     
-    return await explorer.run_exploration_pipeline()
+    return startup_data
