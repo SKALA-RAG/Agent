@@ -1,6 +1,7 @@
 from app.agents.competitor_compare_agent import compare_competitors
 from app.agents.info_perform_agent import get_info_perform
 from app.agents.market_agent import assess_market_potential
+from app.agents.invest_agent import get_invest_judgement
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
@@ -210,7 +211,7 @@ class StartupExplorerAgent:
 
           except Exception as e:
               return f"[오류 발생] {str(e)}"
-    
+          
     async def run_exploration_pipeline(self) -> List[str]:
         """
         스타트업 탐색 전체 파이프라인 실행
@@ -255,5 +256,13 @@ class StartupExplorerAgent:
       
       # 시장 비교 분석 반환
       market_info = await assess_market_potential(self.startup_data)
+
+      data = [
+          perform_info,
+          competiter_info,
+          market_info
+          ]
+
+      invest_info = await get_invest_judgement(data)
       
-      return exploration_result, perform_info, competiter_info, market_info
+      return exploration_result, perform_info, competiter_info, market_info, invest_info
