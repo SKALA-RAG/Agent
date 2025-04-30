@@ -1,10 +1,9 @@
 from langchain_teddynote.tools.tavily import TavilySearch
 from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import Runnable
 from langchain_openai import ChatOpenAI
-from typing import List, Dict, Any, Optional
-from langchain.chains import LLMChain
+from typing import List, Dict, Any
 from dotenv import load_dotenv
+from langchain_core.output_parsers import StrOutputParser
 import os
 
 load_dotenv()
@@ -46,9 +45,11 @@ class StartupExplorerAgent:
         # 검색 쿼리 조정
         search_query = (
           "아래 조건에 따라 스타트업 1곳을 선정하기 위한 자료를 검색해주세요"
+          "다양한 산업 분야와 지역을 고려하여 AI 기술(생성 AI, 머신러닝, 자연어 처리 등)을 활용하는 스타트업을 검색해주세요."
 
           "조건:"
           "- 최근 3년 이내 설립"
+          "- 다양한 산업 분야와 지역 포함"
           "- AI 기술(생성 AI, 머신러닝, 자연어 처리 등)을 핵심 기술로 활용"
           "- 독창성, 성장 가능성, 기술력이 뛰어난 곳"
         )
@@ -57,7 +58,6 @@ class StartupExplorerAgent:
         
         # 실제 검색 수행
         self.search_results = self._perform_web_search(search_query)
-        print(f"검색 결과: {self.search_results}")
         
         return self.search_results
     
@@ -68,8 +68,6 @@ class StartupExplorerAgent:
         try:
             # LangChain Tool의 run() 호출
             self.search_results = self.search_tool.search(query = query)
-            
-            print(f"검색 결과: {self.search_results}")
 
             return self.search_results
 
@@ -92,10 +90,10 @@ class StartupExplorerAgent:
         )
 
         # 3. LLM Chain 생성
-        chain = LLMChain(llm=self.llm, prompt=prompt_template)
+        chain = prompt_template | self.llm | StrOutputParser()
 
         # 4. 질문에 대한 답변 생성
-        response = chain.run({
+        response = chain.invoke({
             "context": self.search_results,
             "list": self.found_startups
         })
@@ -143,14 +141,14 @@ class StartupExplorerAgent:
             )
 
             # 3. LLMChain 실행
-            llm = ChatOpenAI(model=CHAT_MODEL)  # 필요시 gpt-4로 설정
-            chain = LLMChain(llm=self.llm, prompt=prompt)
-            summary = chain.run({
+            chain = prompt | self.llm | StrOutputParser()
+            summary = chain.invoke({
                 "company": self.startup_name,
                 "context": search_result
             })
-            
+
             print(f"기업정보: {summary.strip()}")
+
 
             return summary.strip()
 

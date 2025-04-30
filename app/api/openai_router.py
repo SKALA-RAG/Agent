@@ -3,6 +3,8 @@ from app.agents.startup_explorer_agent import StartupExplorerAgent
 from fastapi import APIRouter, Header, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.competitor_compare_agent import compare_competitors
+from fastapi import APIRouter
+
 from app.agents.open_ai import get_streaming_message_from_openai
 from app.agents.info_perform_agent import get_info_perform
 from fastapi.responses import StreamingResponse
