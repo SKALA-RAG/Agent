@@ -13,7 +13,8 @@ from langchain.agents import create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate
 import os
 import random
-
+from app.agents.generate_report_agent import create_final_report
+from app.agents.invest_agent import get_invest_judgement
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -245,20 +246,35 @@ class StartupExplorerAgent:
         return self.startup_data
 
     async def supervisor(self):
-        await self.run_exploration_pipeline()
+      await self.run_exploration_pipeline()
+      
+      exploration_result = {
+            "기업 정보 요약": self.startup_data 
+        }
+      
+      # 기술 요약 반환
+      tech_info = await get_tech_summary(self.startup_data)      
+      
+      # 창업자 정보 실적 반환
+      perform_info = await get_info_perform(self.startup_data)
+      
+      # 경쟁사 비교 분석 반환
+      competiter_info = await compare_competitors(self.startup_data)
+      
+      # 시장 비교 분석 반환
+      market_info = await assess_market_potential(self.startup_data)
 
-        exploration_result = {"기업 정보 요약": self.startup_data}
+      data = [
+          perform_info,
+          competiter_info,
+          market_info,
+          tech_info
+          ]
 
-        # 창업자 정보 실적 반환
-        perform_info = await get_info_perform(self.startup_data)
+      invest_info = await get_invest_judgement(data)
+      data.append(invest_info)
 
-        # 경쟁사 비교 분석 반환
-        competiter_info = await compare_competitors(self.startup_data)
+      final_report = create_final_report(data)
 
-        # 시장 비교 분석 반환
-        market_info = await assess_market_potential(self.startup_data)
-
-        # 기술 요약 반환
-        tech_info = await get_tech_summary(self.startup_data)
-
-        return exploration_result, perform_info, competiter_info, market_info, tech_info
+      
+      return exploration_result, perform_info, competiter_info, market_info, invest_info, final_report

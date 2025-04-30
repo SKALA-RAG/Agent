@@ -1,11 +1,12 @@
 from typing import Union
 from app.agents.startup_explorer_agent import StartupExplorerAgent
-from fastapi import APIRouter
+from app.agents.invest_agent import get_invest_judgement
 from app.agents.competitor_compare_agent import compare_competitors
 from fastapi import APIRouter
 
 from app.agents.open_ai import get_streaming_message_from_openai
 from app.agents.info_perform_agent import get_info_perform
+from app.agents.generate_report_agent import create_final_report
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -61,6 +62,15 @@ async def get_competitor_analysis(
     - return: 경쟁사 목록 및 비교 분석 요약
     """
     return await compare_competitors(request.data)
+
+@router.post(
+    "/invest",
+    summary="invest",
+)
+async def get_invest_analysis(
+    request: AskRequest
+):
+    return await get_invest_analysis(request.data)
   
 @router.get(
     "/explore_startup",
@@ -73,5 +83,5 @@ async def get_startup_info():
     
     explorer = StartupExplorerAgent()
     startup_data = await explorer.supervisor()
-    
-    return startup_data
+    report = await create_final_report(startup_data)
+    return report

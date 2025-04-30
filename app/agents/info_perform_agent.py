@@ -45,7 +45,7 @@ async def get_info_perform(data: str):
         logging.info(f"Company Search Result: {company_summary}")
 
         # 2. Tavily로 창업자 정보 검색
-        if ceo_name is None:
+        if ceo_name is None or "찾을 수 없음" in ceo_name:
             logging.info("CEO name not found in the response. Using default CEO name.")
             ceo_name = ""
         # founder_query = f"{company_name} 창업자 {ceo_name}의 학력 경력 창업 이력"
