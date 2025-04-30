@@ -48,25 +48,41 @@
 | **Investment Decision Agent**  | 글로벌 유사 기업의 수치 데이터를 기반으로 점수화 (매출, 유저 수, 계약 등 / RAG + Tavily) |
 | **Report Generator Agent**     | 모든 평가 결과를 바탕으로 최종 투자 검토 보고서 자동 생성 |
 
-
-
-### Architecture
-
-
 ### Directory Structure
-├── data/                  # 스타트업 PDF 문서
-├── agents/                # 평가 기준별 Agent 모듈
-├── prompts/               # 프롬프트 템플릿
-├── outputs/               # 평가 결과 저장
-├── app.py                 # 실행 스크립트
-└── README.md
+Agent/
+├── app/
+│   ├── agents/
+│   │   ├── __init__.py
+│   │   ├── competitor_compare_agent.py
+│   │   ├── info_perform_agent.py
+│   │   ├── market_agent.py
+│   │   ├── invest_agent.py
+│   │   ├── generate_report_agent.py
+│   │   ├── open_ai.py
+│   │   ├── invest_db.py
+│   │   └── startup_explorer_agent.py
+│   ├── graph/
+│   │   ├── investment_graph.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── openai_router.py
+│   ├── static/
+        ├── home.html
+│   └── main.py
+├── .env
+├── .gitignore
+├── README.md
+└── requirements.txt
+
+### langgraph
+시도중..........
 
 ### Contributors
-- 김세은:
-- 부승호:
-- 여다건:
-- 조민서:
-- 황유정:
+- 김세은: 창업자 및 실적 분석 에이전트 구축, 투자 판단 에이전트 구축 (RAG 구축 및 Tavily 활용)
+- 부승호: 경쟁자 비교 에이전트 구축 (tavily 활용), lang graph 시도중 
+- 여다건: 시장성 분석 에이전트 구축, 보고서 작성 에이전트 구축 (tavily 활용)
+- 조민서: 스타트업 탐색 및 선정 에이전트 구축(tavily 활용), lang graph 시도중
+- 황유정: 기술 요약 에이전트 구축 (3가지 문서 기반 RAG 구축 및 Tavily 활용)
 
 
 
