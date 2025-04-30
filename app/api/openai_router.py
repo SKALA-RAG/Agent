@@ -1,4 +1,5 @@
 from typing import Union
+from app.agents.startup_explorer_agent import StartupExplorerAgent
 from fastapi import APIRouter, Header, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -45,3 +46,17 @@ async def get_generated_messages_with_header(
     """
     
     return await get_info_perform(request.data)
+
+@router.get(
+    "/explore_startup",
+    summary="Generate messages using OpenAI (streaming)",
+)
+async def get_startup_info():
+    """
+    # Tavily로 스타트업 자료 검색하여 투자 검토 회사 선정
+    - return: 선정 기업 정보 요약
+    """
+    
+    explorer = StartupExplorerAgent()
+    
+    return await explorer.run_exploration_pipeline()
