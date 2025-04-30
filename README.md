@@ -41,7 +41,6 @@
 | Agent 명칭                     | 기능 설명 |
 |--------------------------------|-----------|
 | **Startup Explorer Agent**     | 웹에서 스타트업 관련 기본 정보, 핵심 제품, 활동 현황 등을 수집 |
-| **Tech Summary Agent**         | IR 문서, 기술 백서, 보도자료 등에서 기술 역량을 요약 (RAG + 3개 문서 기준) |
 | **Market Insight Agent**       | 시장 성장성, 유사 기업 동향, 투자 유치 현황 등 외부 검색 기반 시장성 분석 (Tavily 활용) |
 | **Competitor Analysis Agent**  | 관련 5개 경쟁사 추출 및 비교 분석, 차별화 포인트 도출 |
 | **Supervisor Agent**           | 개별 Agent의 분석 결과를 통합하여 투자 판단용 정리 정보 생성 |
