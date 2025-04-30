@@ -1,6 +1,6 @@
 from app.agents.competitor_compare_agent import compare_competitors
 from app.agents.info_perform_agent import get_info_perform
-from app.agents.market_agent import run_market_assessment, text_to_startup_info
+from app.agents.market_agent import assess_market_potential
 from langchain_teddynote.tools.tavily import TavilySearch
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
@@ -251,7 +251,6 @@ class StartupExplorerAgent:
       competiter_info = await compare_competitors(self.startup_data)
       
       # 시장 비교 분석 반환
-      formatted_startup_info = text_to_startup_info(self.startup_data)
-      market_info = run_market_assessment(formatted_startup_info)
+      market_info = await assess_market_potential(self.startup_data)
       
       return self.startup_data, perform_info, competiter_info, market_info
