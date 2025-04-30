@@ -1,0 +1,19 @@
+# LangChain core and extensions
+langchain>=0.3.0,<0.4.0
+langchain-core>=0.1.40
+langchain-community>=0.0.25
+langchain-openai>=0.1.8
+langchain-teddynote>=0.1.0
+
+# OpenAI LLM API
+openai>=1.0.0
+
+# Tavily Web Search
+tavily-python>=0.3.3
+
+# 환경 변수 로딩
+python-dotenv>=1.0.1
+
+# FastAPI for backend
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
