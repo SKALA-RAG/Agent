@@ -83,5 +83,5 @@ async def get_startup_info():
     
     explorer = StartupExplorerAgent()
     startup_data = await explorer.supervisor()
-    report = await create_final_report(startup_data)
-    return report
+    
+    return startup_data

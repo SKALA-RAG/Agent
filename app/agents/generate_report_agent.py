@@ -35,8 +35,8 @@ report_template = """
 * 대표자 및 주요 경영진: 이력, 주요 경력, 핵심 인력 소개
 * 주요 연혁: 설립, 투자유치, 특허/인증, 주요 거래처 등
 
-**2. 사업 및 비즈니스 모델**
-(기업 개요({exploration_summary}) 내 '주요 사업 분야' 등 관련 내용을 바탕으로 상세히 서술)
+**2. 사업 개요 및 비즈니스 모델**
+(기업 개요({exploration_summary}, {perform_summary}) 내 '주요 사업 분야' 등 관련 내용을 바탕으로 상세히 서술)
 * 핵심 사업 내용: 무엇을, 누구에게, 어떻게 제공하는가?
 * 비즈니스 모델: 수익 구조, 고객 유치/유지 전략
 * 시장 문제점 및 Pain Point: 어떤 문제를 해결하는가?
@@ -49,15 +49,13 @@ report_template = """
 
 **4. 경쟁사 및 차별성 분석**
 (경쟁사 분석 결과({competitor_list}) 와 '주요 차별화 요소' ({competitor_summary}) 등 관련 내용을 바탕으로 다음 항목을 상세히 서술)
-
 * 주요 경쟁사 리스트: 경쟁사별 장단점 요약
 * 경쟁 우위 요소: 기술, 가격, 네트워크, 브랜드 등
 * 차별화 전략: 우리만의 강점, 진입장벽
 
 **5. 기술력 및 지식재산권**
-(기업 개요({exploration_summary}) 내 '주요 AI 기술' 및 실적 정보({perform_summary}) 내 특허 관련 내용을 바탕으로 서술)
+(기업 개요({exploration_summary}) 내 '주요 AI 기술' 및 실적 정보({tech_summary}) 내 특허 관련 내용을 바탕으로 서술)
 * 핵심 기술 요약: 기술 설명, 적용 분야, 혁신성
-* 논문/특허/인증: 보유 현황, 출원/등록 내역, 기술적 차별성
 * 기술 로드맵: 향후 개발 계획
 
 **6. 팀 구성 및 조직 역량**
@@ -115,9 +113,13 @@ async def create_final_report(results_data: List[Dict[str, Any]]) -> Dict[str, A
         perform_info = results_data[1]
         competitor_info = results_data[2]
         market_info = results_data[3]
-        investment_analysis_result = results_data[4]
+        tech_info = results_data[4]
+        investment_analysis_result = results_data[5]
 
         exploration_summary = exploration_result.get("기업 정보 요약", "정보 없음")
+
+        # tech_info에서 두 정보를 별도로 추출
+        tech_summary = tech_info.get("기술 요약", "정보 없음")
 
         # perform_info에서 두 정보를 별도로 추출
         perform_summary = perform_info.get("기업 실적 요약", "정보 없음")
@@ -136,6 +138,7 @@ async def create_final_report(results_data: List[Dict[str, Any]]) -> Dict[str, A
         final_report = await report_generation_chain.ainvoke({
             "exploration_summary": exploration_summary,
             "perform_summary": perform_summary,
+            "tech_summary": tech_summary,
             "founder_summary": founder_summary,
             "competitor_summary": competitor_analysis,
             "competitor_list": competitor_list,

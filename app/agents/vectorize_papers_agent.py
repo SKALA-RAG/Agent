@@ -165,6 +165,8 @@ def extract_company_name(data: str) -> str:
 async def get_tech_summary(data: str):
     company_name = extract_company_name(data)
 
+    logging.info(f"회사명: {company_name}")
+
     query = 'cat:cs.AI OR cat:stat.ML OR all:"artificial intelligence" OR all:"deep learning"'
     xml_data = fetch_arxiv_papers(query, max_results=300)
     papers = parse_arxiv_response(xml_data)
@@ -181,4 +183,4 @@ async def get_tech_summary(data: str):
     summarize_company_from_pdf(pdf_file, persist_dir=persist_dir)
 
     # 비동기 기술 요약 실행
-    tech_summary(company_name, db_path=persist_dir)
+    return tech_summary(company_name, db_path=persist_dir)

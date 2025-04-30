@@ -15,6 +15,7 @@ import os
 import random
 from app.agents.generate_report_agent import create_final_report
 from app.agents.invest_agent import get_invest_judgement
+import logging
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -264,17 +265,20 @@ class StartupExplorerAgent:
       # 시장 비교 분석 반환
       market_info = await assess_market_potential(self.startup_data)
 
+      logging.info(tech_info)
+
       data = [
+          exploration_result,
           perform_info,
           competiter_info,
           market_info,
           tech_info
           ]
-
+      
       invest_info = await get_invest_judgement(data)
+      print("=== 투자 판단 완료 ===")
       data.append(invest_info)
 
-      final_report = create_final_report(data)
-
+      final_report = await create_final_report(data)
       
       return exploration_result, perform_info, competiter_info, market_info, invest_info, final_report

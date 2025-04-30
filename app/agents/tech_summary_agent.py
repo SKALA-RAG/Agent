@@ -20,6 +20,8 @@ logging.basicConfig(
 
 # 회사 특허 전체 가져오기
 def fetch_patents(applicant_name):
+    logging.info(f"특허 검색: {applicant_name}")
+
     url = "http://plus.kipris.or.kr/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch"
     params = {
         "ServiceKey": os.getenv("KIPRIS_API_KEY"),
@@ -115,7 +117,11 @@ def tech_summary(company_name, db_path):
 
     if not patents:
         logging.info("특허 없음. 회사명을 다시 확인하세요.")
-        return
+        return {
+            "기술 요약": "특허 없음",
+            "추출 키워드": [],
+            "특허 개수": 0,
+        }
 
     logging.info(f"총 {len(patents)}건의 특허 수집됨")
 
