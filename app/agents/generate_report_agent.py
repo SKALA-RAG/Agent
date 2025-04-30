@@ -6,7 +6,6 @@ from fastapi import HTTPException
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
-from app.agents.startup_explorer_agent import StartupExplorerAgent
 import json
 
 # 환경 변수 로드
@@ -49,7 +48,7 @@ report_template = """
 * 고객 및 수요 분석: 주요 타깃 고객, 고객 세분화
 
 **4. 경쟁사 및 차별성 분석**
-(경쟁사 분석 결과({competitor_list}) 와 '주요 차별화 요소' ({competitor_analysis}) 등 관련 내용을 바탕으로 다음 항목을 상세히 서술)
+(경쟁사 분석 결과({competitor_list}) 와 '주요 차별화 요소' ({competitor_summary}) 등 관련 내용을 바탕으로 다음 항목을 상세히 서술)
 
 * 주요 경쟁사 리스트: 경쟁사별 장단점 요약
 * 경쟁 우위 요소: 기술, 가격, 네트워크, 브랜드 등
@@ -80,7 +79,7 @@ report_template = """
 * 위험 요인 및 대응 전략: 시장, 기술, 재무 등
 
 **9. 투자 판단 및 종합 의견**
-(투자 판단 결과 {investment_analysis_result}를 바탕으로 서술)
+(투자 판단 결과 {investment_analysis}를 바탕으로 서술)
 * 투자 포인트: 투자 매력, 기대 효과, Exit 전략(회수 방안)
 * 리스크 요인 및 개선 과제
 * 최종 평가 및 투자 의견: 투자/보류/기타
@@ -96,7 +95,7 @@ report_prompt = PromptTemplate.from_template(report_template)
 output_parser = StrOutputParser()
 report_generation_chain = report_prompt | model | output_parser
 
-async def create_final_report(results_data: List[Dict[str, Any]], investment_analysis_result: Dict[str, Any]) -> Dict[str, Any]:
+async def create_final_report(results_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     여러 에이전트의 결과를 종합하여 최종 투자 보고서를 생성
     
@@ -116,6 +115,7 @@ async def create_final_report(results_data: List[Dict[str, Any]], investment_ana
         perform_info = results_data[1]
         competitor_info = results_data[2]
         market_info = results_data[3]
+        investment_analysis_result = results_data[4]
 
         exploration_summary = exploration_result.get("기업 정보 요약", "정보 없음")
 
@@ -129,7 +129,7 @@ async def create_final_report(results_data: List[Dict[str, Any]], investment_ana
 
         market_summary = market_info.get("시장성 종합 분석", "정보 없음")
 
-        investment_analysis_result = investment_analysis_result.get("투자 판단 결과", "정보 없음")
+        investment_analysis = investment_analysis_result.get("투자 판단 보고서", "정보 없음")
 
         logging.info("최종 보고서 작성 시작")
         # 2. 최종 보고서 생성
@@ -140,7 +140,7 @@ async def create_final_report(results_data: List[Dict[str, Any]], investment_ana
             "competitor_summary": competitor_analysis,
             "competitor_list": competitor_list,
             "market_summary": market_summary,
-            "investment_analysis_result": investment_analysis_result
+            "investment_analysis": investment_analysis
         })
         logging.info("최종 보고서 작성 완료")
                 

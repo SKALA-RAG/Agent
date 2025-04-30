@@ -6,6 +6,7 @@ from fastapi import APIRouter
 
 from app.agents.open_ai import get_streaming_message_from_openai
 from app.agents.info_perform_agent import get_info_perform
+from app.agents.generate_report_agent import create_final_report
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -82,5 +83,5 @@ async def get_startup_info():
     
     explorer = StartupExplorerAgent()
     startup_data = await explorer.supervisor()
-    
-    return startup_data
+    report = await create_final_report(startup_data)
+    return report
