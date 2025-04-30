@@ -1,7 +1,6 @@
 from typing import Union
 from app.agents.startup_explorer_agent import StartupExplorerAgent
-from fastapi import APIRouter, Header, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter
 from app.agents.competitor_compare_agent import compare_competitors
 from fastapi import APIRouter
 
