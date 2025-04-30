@@ -1,7 +1,6 @@
 from typing import Union
 from app.agents.startup_explorer_agent import StartupExplorerAgent
-from fastapi import APIRouter, Header, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter
 
 from app.agents.open_ai import get_streaming_message_from_openai
 from app.agents.info_perform_agent import get_info_perform
