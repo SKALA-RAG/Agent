@@ -8,6 +8,14 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 import json
 
+import re
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 # 환경 변수 로드
 load_dotenv()
 
@@ -103,7 +111,9 @@ async def create_final_report(results_data: List[Dict[str, Any]]) -> Dict[str, A
         [1]: 실적 및 창업자 정보 에이전트의 결과
         [2]: 경쟁사 비교 에이전트의 결과
         [3]: 시장성 평가 에이전트의 결과
-        
+        [4]: 기술 요약 에이전트의 결과
+        [5]: 투자 판단 에이전트의 결과
+
     Returns:
         Dict[str, Any]: 최종 보고서 및 관련 정보
     """
@@ -152,3 +162,141 @@ async def create_final_report(results_data: List[Dict[str, Any]]) -> Dict[str, A
     except Exception as e:
         logging.error(f"보고서 생성 중 오류 발생: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Report Generation Error: {str(e)}")
+
+def convert_report_to_pdf(content: str) -> bytes:
+    """Markdown 형식의 보고서 내용을 PDF 바이트로 변환합니다."""
+    # 마크다운 기호 제거 함수
+    def remove_markdown(text):
+        # 제목 기호(#) 제거
+        text = re.sub(r'^#+\s+', '', text)
+        # 볼드체(**) 제거
+        text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+        # 이탤릭체(*) 제거
+        text = re.sub(r'\*([^*]+)\*', r'\1', text)
+        # 리스트 기호 제거 (*, -, +)
+        text = re.sub(r'^[*\-+]\s+', '', text)
+        # 링크 텍스트만 남기기 [텍스트](링크)
+        text = re.sub(r'\[(.+?)\]\(.+?\)', r'\1', text)
+        # 코드 블록 기호(```) 제거
+        text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+        # 인라인 코드(`) 제거
+        text = re.sub(r'`(.+?)`', r'\1', text)
+        return text
+    
+    # 나눔고딕 폰트 경로 직접 지정
+    font_path = "./Nanum_Gothic/NanumGothic-Regular.ttf"
+    font_name = "NanumGothic"
+    
+    pdfmetrics.registerFont(TTFont(font_name, font_path))
+    print(f"폰트 등록 성공: {font_name} ({font_path})")
+    korean_font_name = font_name
+    
+    # PDF 생성
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4, 
+        topMargin=50, 
+        bottomMargin=50, 
+        leftMargin=50, 
+        rightMargin=50
+    )
+    
+    # 스타일 정의
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(
+        name='ReportTitle',
+        parent=styles['Heading1'],
+        fontName=korean_font_name,
+        fontSize=18,
+        alignment=1,  # 가운데 정렬
+        spaceAfter=20
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='ReportHeading',
+        parent=styles['Heading2'],
+        fontName=korean_font_name,
+        fontSize=14,
+        spaceBefore=12,
+        spaceAfter=6
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='ReportBody',
+        parent=styles['Normal'],
+        fontName=korean_font_name,
+        fontSize=10,
+        leading=14,  # 줄 간격
+        alignment=TA_JUSTIFY,  # 양쪽 정렬
+        spaceAfter=6
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='ReportList',
+        parent=styles['Normal'],
+        fontName=korean_font_name,
+        fontSize=10,
+        leading=14,
+        leftIndent=20,  # 들여쓰기
+        spaceAfter=4
+    ))
+
+    story = []
+    lines = content.split('\n')
+    
+    title_added = False
+    for line in lines:
+        stripped_line = line.strip()
+        
+        if not stripped_line:
+            story.append(Spacer(1, 6))
+            continue
+
+        # 구조 확인 (마크다운 기호 제거 전에)
+        is_title = False
+        is_heading = False
+        is_list_item = False
+        
+        # 제목 처리 (첫 번째 '**'로 시작하고 끝나는 줄)
+        if stripped_line.startswith('**') and stripped_line.endswith('**') and not title_added:
+            is_title = True
+        # 부제목 처리 (예: '**숫자.**' 패턴)
+        elif re.match(r'\*\*\d+\.\s*.*?\*\*', stripped_line):
+            is_heading = True
+        # 부제목 처리 (예: '## 제목' 패턴)
+        elif stripped_line.startswith('## '):
+            is_heading = True
+        # 목록 항목 처리 (예: '* ', '- ')
+        elif stripped_line.startswith('* ') or stripped_line.startswith('- '):
+            is_list_item = True
+        
+        # 마크다운 기호 제거
+        cleaned_line = remove_markdown(stripped_line)
+        
+        # 특수 문자 처리 (ReportLab에서 처리할 수 없는 문자 제거)
+        cleaned_line = cleaned_line.replace('&', '&amp;')
+        cleaned_line = cleaned_line.replace('<', '&lt;')
+        cleaned_line = cleaned_line.replace('>', '&gt;')
+
+        # 구조에 따른 처리
+        if is_title:
+            element = Paragraph(cleaned_line, styles['ReportTitle'])
+            title_added = True
+        elif is_heading:
+            element = Paragraph(cleaned_line, styles['ReportHeading'])
+        elif is_list_item:
+            element = Paragraph(cleaned_line, styles['ReportList'])
+        else:
+            element = Paragraph(cleaned_line, styles['ReportBody'])
+
+        story.append(element)
+
+    try:
+        doc.build(story)
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        return pdf_bytes
+    except Exception as e:
+        print(f"PDF 빌드 중 오류 발생: {e}")
+        raise
