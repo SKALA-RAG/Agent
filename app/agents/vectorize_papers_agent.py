@@ -1,6 +1,8 @@
 import os
 import requests
 import logging
+import asyncio
+import re
 import xml.etree.ElementTree as ET
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
@@ -12,7 +14,7 @@ from langchain.schema import Document
 from langchain_community.chat_models import ChatOpenAI
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from tech_summary_agent import tech_summary
+from app.agents.tech_summary_agent import tech_summary
 
 from dotenv import load_dotenv
 
@@ -154,21 +156,25 @@ def summarize_company_from_pdf(pdf_path, persist_dir):
     return vectorstore
 
 
-# 실행
-if __name__ == "__main__":
+def extract_company_name(data: str) -> str:
+    match = re.search(r"1\.\s*회사명[:：]?\s*(.+)", data)
+    return match.group(1).strip() if match else "회사명_없음"
 
-    company_name = "뉴라이브"
+
+# 실행
+async def get_tech_summary(data: str):
+    company_name = extract_company_name(data)
+
+    logging.info(f"회사명: {company_name}")
 
     query = 'cat:cs.AI OR cat:stat.ML OR all:"artificial intelligence" OR all:"deep learning"'
     xml_data = fetch_arxiv_papers(query, max_results=300)
     papers = parse_arxiv_response(xml_data)
 
     output_dir = "output"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     pdf_path = os.path.join(output_dir, "ai_papers_summary.pdf")
-
     logging.info(f"총 {len(papers)}개의 논문을 찾았습니다.")
     pdf_file = create_papers_pdf(papers, filename=pdf_path)
 
@@ -176,4 +182,5 @@ if __name__ == "__main__":
     persist_dir = os.path.join(output_dir, "vector_db")
     summarize_company_from_pdf(pdf_file, persist_dir=persist_dir)
 
-    tech_summary(company_name, db_path=persist_dir)
+    # 비동기 기술 요약 실행
+    return tech_summary(company_name, db_path=persist_dir)

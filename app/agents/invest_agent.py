@@ -74,12 +74,19 @@ def format_input_for_invest_judgement(blocks: list[dict]) -> str:
     lines = []
     for block in blocks:
         for key, value in block.items():
+            if isinstance(value, list):
+                value = "\n".join(str(v) for v in value)
+            elif value is None:
+                value = "정보 없음"
+            else:
+                value = str(value)
+
             lines.append(f"## {key.strip()}\n{value.strip()}\n")
     return "\n".join(lines).strip()
 
 
-async def get_invest_judgement(data: str):
 
+async def get_invest_judgement(data: list[dict]):
     try:
         data = format_input_for_invest_judgement(data)
 
