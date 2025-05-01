@@ -157,7 +157,7 @@ def summarize_company_from_pdf(pdf_path, persist_dir):
 
 
 def extract_company_name(data: str) -> str:
-    match = re.search(r"1\.\s*회사명[:：]?\s*(.+)", data)
+    match = re.search(r"1\.\s*회사명[:：]?\s*([^\n(]+)", data)
     return match.group(1).strip() if match else "회사명_없음"
 
 
